@@ -1,0 +1,470 @@
+---
+title: 'Dynamic EUR/USD Market Insights: Automated Data Tracking & BI Dashboarding'
+author: "Hamza Haouzmani | BI & Automation Specialist"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    theme: cosmo
+    highlight: tango
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.align = "center", fig.width = 10, fig.height = 6)
+# install.packages("tidyverse") 
+# install.packages("googlesheets4") 
+# install.packages("lubridate") 
+library(tidyverse)
+# library(googlesheets4) 
+# library(lubridate)
+```
+
+
+# Dynamic EUR/USD Market Insights
+
+
+### Automated Data Tracking & BI Dashboarding
+
+_By Hamza Haouzmani | BI & Automation Specialist_
+
+`r Sys.Date()`
+
+
+
+
+---
+
+
+**Introduction:**
+
+In the fast-paced world of trading and finance, the ability to track and analyze exchange rates in real time is crucial. This project aims to provide an automated and intelligent solution for tracking the Euro/Dollar (EUR/USD) exchange rate, delivering valuable insights through an interactive dashboard.
+
+<br>
+
+
+
+**Project Logo:**
+
+![EUR/USD Insights Logo](F:/BI & Automation Specialist/image/Gemini_Generated_Image_xlp1bkxlp1bkxlp1.png)
+
+---
+
+
+
+
+#1. The Currency Challenge: Why Automated Tracking?
+
+Exchange rates are affected by a wide range of economic and political factors, resulting in constant fluctuations. For investors, businesses, and analysts:
+
+* **Constant Fluctuations:** make manual tracking impractical and prone to error.
+
+* **The Need for Accuracy:** financial decisions require accurate, real-time data.
+
+* **Lost Opportunities:** delays in obtaining data can lead to missed investment opportunities or increased risk.
+
+Our project aims to overcome these challenges by automating the data collection and analysis process..
+
+
+
+
+
+#2. Our Innovative Solution: Real-Time EUR/USD Tracking
+
+We offer a comprehensive solution that combines Google Sheets, Google Apps Script, and Tableau (or Looker Studio) technologies to create an automated monitoring and analysis system for the EUR/USD currency pair.
+
+## Key Components of the Solution:
+
+1. **Automated Data Collection:**
+
+* **Tool:** Google Sheets & Google Apps Script
+
+* **Function:** Fetches the EUR/USD exchange rate every 30 minutes.
+
+2. **Historical Data Storage:**
+
+* **Tool:** Google Sheets (USDEUR Summary Sheet)
+
+* **Function:** Records historical data on price, changes, and trend status.
+
+3. **Powerful Business Intelligence:**
+
+* **Tool:** Tableau Public Dashboard
+
+* **Function:** Displays interactive and dynamic insights from the collected data.
+
+## Solution Flowchart:
+
+Here you can add an image illustrating the flowchart that connects Google Sheets -> Apps Script -> Tableau.
+
+![Solution Flowchart](F:/BI & Automation Specialist/image/Screenshot 2025-11-28 140800.png)
+
+
+
+
+
+
+#3. In-Depth Look: The Data Engine - Google Sheets & Apps Script
+
+Google Sheets forms the backbone for data collection, storage, and initial analysis. Its capabilities are enhanced by Google Apps Script to automate key tasks.
+
+##3.1. `LIVE_DATA` Sheet: Fetching Real-Time Price
+
+This sheet is used to continuously fetch the latest EUR/USD exchange rate.
+
+* **Function:** Fetches the current price, date and time, and the previous price for the currency pair.
+* **Source:** Releases on the powerful `GOOGLEFINANCE` function to fetch real-time financial data.
+
+**Screenshot: LIVE_DATA Sheet**
+
+![LIVE_DATA Sheet Screenshot](F:/BI & Automation Specialist/image/Screenshot 2025-11-28 141237.png)
+_**Explanation:** Screenshot showing the `LIVE_DATA` sheet where the latest EUR/USD exchange rate is fetched._
+
+##3.2. `USDEUR Summary` Sheet: Historical Data Record
+
+This sheet is the main repository for all collected historical data points.
+
+* **Function:** Stores each exchange rate record with the date and time, previous rate, daily (or 30-minute) change, and trend status (UP/DOWN/FLAT).
+* **`Trend Status` Column:** This column is calculated by comparing the current price to the previous price, providing an immediate view of the trend at each point in time.
+
+**Screenshot: USD Summary Sheet**
+
+![USDEUR Summary Sheet Screenshot](F:/BI & Automation Specialist/image/Screenshot 2025-11-28 141314.png)
+_**Explanation:** A screenshot showing the historical data history of the EUR/USD rate in the `USDEUR Summary` sheet._
+
+##3.3. `Statistical Summary` Sheet: Raw Key Performance Indicators
+
+This sheet provides a concise statistical summary of exchange rate data. This is the direct source of the Key Performance Indicators (KPIs) in the dashboard.
+
+* **Function:** Automatically calculates the latest exchange rate, all-time average price, price volatility (standard deviation), current trend status, and total number of records.
+* **Benefits:** Provides a quick overview of the most important metrics without the need to analyze raw data.
+
+**Screenshot: Statistical Summary Sheet**
+
+![Statistical Summary Sheet Screenshot](F:/BI & Automation Specialist/image/Screenshot 2025-11-28 141410.png)
+
+**Explanation:** A screenshot showing the statistical summary and raw key performance indicators (KPIs) in the `Statistical Summary` sheet.
+
+## 3.4. Data Automation Using Google Apps Script
+
+This is where the power of automation lies. A custom Google Apps Script fetches and records data regularly, ensuring that our historical log and statistical summaries are always up-to-date.
+
+* **Basic Function:**
+
+1. Reads the latest EUR/USD rate from the `LIVE_DATA` sheet.
+
+2. Calculates the previous rate by looking at the last recorded entry in the `USDEUR Summary`.
+
+3. Adds a new row to the `USDEUR Summary` sheet containing the current timestamp, current rate, previous rate, and other derived metrics. 
+4. Ensures that calculated columns (such as daily change and trend status) in `USDEUR Summary` are correctly populated for the new row. 
+5. Executes this operation every 30 minutes using a time-driven trigger configured in Google Apps Script.
+
+* **Script Code (`recordHistoricalRate()`):** 
+
+````javascript 
+```{js eval=FALSE} 
+function recordHistoricalRate() { 
+const HISTORY_SHEET_NAME = 'USDEUR_Summary'; 
+const LIVE_SHEET_NAME = 'LIVE_DATA'; 
+
+try { 
+const ss = SpreadsheetApp. getActiveSpreadsheet(); 
+const historySheet = ss. getSheetByName(HISTORY_SHEET_NAME); 
+const liveSheet = ss. getSheetByName(LIVE_SHEET_NAME); 
+
+// Get the last row with content in the history sheet to determine where to append the new row 
+const lastRowInHistory = historySheet. getLastRow(); 
+const newRowIndex = lastRowInHistory + 1; 
+
+// Read the current price from the live data sheet. 
+//Assuming EUR_RATE is in cell A1 of LIVE_DATA sheet based on your code snippet 
+const EUR_RATE = liveSheet.getRange('A1').getValue(); 
+
+// Get the previous rate from column E (5th column) of the last recorded row in HISTORY_SHEET_NAME. 
+// We assume column E in USDEUR_Summary holds the "Current Rate" of the previous entry. 
+let previousRate = 0; 
+if (lastRowInHistory > 1) { // Ensure there's a previous record to read from (assuming header in row 1) 
+previousRate = historySheet. getRange(lastRowInHistory, 5). getValue(); 
+} else { 
+// If this is the first data entry after headers, previousRate can be set to currentRate or 0 
+previousRate = EUR_RATE; 
+} 
+
+// Create the new data row to be appended to USDEUR_Summary 
+// The structure should match the columns in USDEUR_Summary: 
+// A: Metric, B: Last Updated (CET), C: Source Currency, D: Target Currency, E: Exchange Rate, F: Previous Day's Rate, G: 30 minutes Change (%), H: Trend Status 
+// Note: Columns G and H will be populated by formulas if they exist in G2:H2 
+const rowData = [ 
+"USD to EUR Rate", // Column A: Metric 
+new Date(), //Column B: Last Updated (CET) - Current timestamp 
+"USD", // Column C: Source Currency 
+"EUR", // Column D: Target Currency 
+EUR_RATE, // Column E: Exchange Rate (Current Rate) 
+previousRate // Column F: Previous Day's Rate 
+]; 
+
+// Add the row to the history sheet 
+historySheet. appendRow(rowData); 
+
+// Copy formulas for '30 minutes Change (%)' and 'Trend Status' to the new row 
+// Assuming formulas for these are in columns G and H of row 2 
+historySheet.getRange("G2:H2"). copyTo(historySheet.getRange(newRowIndex, 7, 1, 2)); 
+
+Logger.log("Historical record added successfully to " + HISTORY_SHEET_NAME + " at row " + newRowIndex); 
+
+} catch (e) { 
+Logger.log("Error recording data: " + e.toString()); 
+// Optionally, send an email notification about the error 
+// MailApp.sendEmail("your_email@example.com", "Apps Script Error - EUR/USD Tracker", "Error: " + e.toString()); 
+}
+
+}
+
+```
+
+_**Detailed Script Explanation:**_
+
+_This script performs the following steps periodically:_
+
+1. _**Select Sheets:** Selects the `USDEUR_Summary` and `LIVE_DATA` sheets in the active data table._
+
+2. _**Fetch Current Price:** Reads the latest EUR/USD price from cell `A1` in the `LIVE_DATA` sheet._
+
+3. _**Fetch Previous Price:** Extracts the price recorded in column 5 (`E`) from the last row added in the `USDEUR_Summary` sheet. If there are no previous records, the previous price is considered the same as the current price to prevent errors.
+
+4. **Set up data for the new row:** Creates a new data row containing a description of the scale, the current date and time, the source and target currencies, the current price, and the previous price.
+
+5. **Add row:** Adds the new row to the `USDEUR_Summary` sheet.
+
+6. **Copy formulas:** Copys the formulas in cells `G2:H2` (for "30 minutes Change (%)" and "Trend Status") to the new row, ensuring these values ​​are automatically calculated for each new entry.
+
+7. **Error logging:** Includes error handling that logs any problems that occur during execution in the `Logger`.
+
+* **Set up the time-driven trigger:**
+
+To run this script automatically every 30 minutes, a time trigger must be set up in Google Apps Script:
+
+1. In the Google Apps Script editor, click the icon 1. Click on the `Triggers` (clock icon) in the left sidebar.
+
+2. Click on `+ Add Trigger` in the bottom right corner.
+
+3. Select the function you want to run: `recordHistoricalRate`.
+
+4. Set the `Event type` to `Time-driven`.
+
+5. Select the `Time-based trigger type` to `Every 30 minutes`.
+
+6. Save the trigger.
+
+**Result:** The data collection and logging process is now fully automated, ensuring your dashboard is regularly updated.
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+# 4. In-Depth Analysis: The Interactive Dashboard in Tableau Public
+
+After data is automatically collected and processed in Google Sheets, it is directly linked to an interactive dashboard in Tableau Public (or Looker Studio). This dashboard provides users with immediate and customizable insights into EUR/USD performance.
+
+## 4.1. Data Integration with Tableau
+
+* **Direct Connection:** Tableau is directly linked to the `USDEUR Summary` and `Statistical Summary` sheets in Google Sheets. This ensures the dashboard always displays the most up-to-date data available.
+
+* **Data Updates:** Scheduled updates can be set up in Tableau Public to ensure the dashboard is automatically updated with each new data entry from Google Apps Script.
+
+## 4.2. Main Dashboard: A Comprehensive Overview
+
+The dashboard offers a clean and intuitive design, divided into main sections to facilitate market analysis.
+
+**Screenshot: Full Dashboard**
+
+![Full Dashboard Screenshot](F:/BI & Automation Specialist/image/Screenshot 2025-11-28 122023.png)
+
+**Explanation:** A comprehensive screenshot of the EUR/USD dashboard in Tableau, showing all the main components.
+
+## 4.3. Key Performance Indicators (KPIs) at a Glance
+
+Key indicators are displayed at the top of the dashboard to provide an immediate summary of the most important metrics.
+
+* **Latest Exchange Rate:** The most recent recorded exchange rate for EUR/USD.
+
+* **Current Trend:** Shows the current trend (UP/DOWN/FLAT) in visual color (green for UP, red for DOWN).
+
+* **Average Rate (All Time):** The average historical exchange rate for all recorded data.
+
+* **Rate Volatility (StDev):** Measures price volatility using standard deviation, indicating how much the price has fluctuated. * **`Total Data Records` / `Number of Records`:** The total number of recorded data points.
+
+**Screenshot (Optional): Separate KPIs**
+
+![KPIs Section Screenshot](F:/BI & Automation Specialist/image/Screenshot 2025-11-28 143130.png)
+
+_**Explanation:** A dedicated section that clearly displays key performance indicators (KPIs) on the dashboard._
+
+## 4.4. Visual Analysis: In-Depth Market Understanding
+
+The dashboard consists of three main graphical visualizations that provide in-depth insights.
+
+### 4.4.1. `Exchange Rate Over Time`: Tracking Historical Price
+
+* **Function:** A line chart illustrating the evolution of the EUR/USD exchange rate over time.
+
+* **Insights:** Helps identify long-term trends, periods of stability, and periods of sharp fluctuations. The line is colored based on the price direction (UP/DOWN) to enhance clarity.
+
+**Screenshot: Exchange Rate Over Time**
+
+![Exchange Rate Over Time Screenshot](F:/BI & Automation Specialist/image/Screenshot 2025-11-28 143302.png)
+
+**Explanation:** A line chart showing historical changes in the EUR/USD price with trend coloring.
+
+### 4.4.2. `30-Minute Change (%) Over Time`: Short-Term Volatility
+
+* **Function:** A horizontal bar chart displaying the percentage change in the EUR/USD price every 30 minutes.
+
+* **Insights:** Highlights short-term volatility, helping to identify periods with the largest upward or downward changes. The colors clearly indicate the trend in each period (UP/DOWN).
+
+**Screenshot: 30-Minute Change (%) Over Time**
+
+![30-Minute Change (%) Over Time Screenshot](F:/BI & Automation Specialist/image/Screenshot 2025-11-28 143407.png)
+
+**Explanation:** A bar chart showing the percentage changes in the EUR/USD price every 30 minutes.
+
+### 4.4.3. `Trend Status Distribution`: Trend Distribution
+
+* **Function:** A donut chart showing the relative distribution of trend statuses (UP/DOWN/FLAT) across all historical records.
+
+* **Insights:** Provides a quick overview of whether the market is trending upward, downward, or flat over the time period covered by the data.
+
+**Screenshot: Trend Status Distribution**
+
+![Trend Status Distribution Screenshot](F:/BI & Automation Specialist/image/Screenshot 2025-11-28 143534.png)
+
+**Explanation:** A donut chart showing the relative distribution of market trends (up, down, stable).
+
+## 4.5. Interactivity & Flexibility
+
+* **Time Filters:** The dashboard includes a time filter (specifically on the `Last Updated (CET)` column) that allows users to customize the date and time range for displaying data, providing significant analytical flexibility.
+
+* **Cross-Filtering:** Charts can be configured to interact with each other. For example, clicking on a specific part of the donut chart can filter all other charts to display only data related to that trend.
+
+---
+
+
+
+
+
+
+
+#5. What this service can help you with: Invaluable Value
+
+This automated EUR/USD exchange rate tracking and analysis service offers real value to a wide range of individuals and businesses. It's not just a dashboard; it's an empowering tool for making better decisions.
+
+## Key Benefits of Our Service:
+
+* **Real-time Insights:**
+
+* Say goodbye to outdated data! Get the latest prices and trends every 30 minutes, allowing you to respond quickly to changing market conditions.
+
+* **Time-Saving Automation:**
+
+* Free yourself from tedious and time-consuming manual tracking. The system works automatically in the background, ensuring you have access to data effortlessly.
+
+* **Comprehensive & Reliable Analysis:**
+
+* Benefit from in-depth analysis of trends, volatility, and key statistics, all in one place, enhancing your understanding of market dynamics. * **Data-Driven Decisions:**
+
+* Make smarter, more confident financial and trading decisions, supported by accurate data and clear analysis, instead of guesswork or relying on delayed information.
+
+* **Flexibility & Customization:**
+
+* The dashboard and filters can be tailored to your specific analytical needs, with the option to expand to track other currency pairs as required.
+
+* **Reduced Risk:**
+
+* With a better understanding of market volatility and trends, you can manage financial risk more effectively.
+
+---
+
+
+
+
+
+
+
+
+
+# 6 Who is this service for? (Target Audience)
+
+This solution is ideal for:
+
+* **Individual Investors & Traders:** who need a reliable tool to monitor currency movements for quick and informed investment decisions.
+
+* **Businesses with Multi-Currency Operations:** to manage foreign exchange risks and plan international transactions more efficiently.
+
+* **Financial Analysts:** as a powerful tool for market analysis and accurate reporting.
+
+* **Project Managers & Developers:** who are looking for data automation and business intelligence solutions for financial projects.
+
+---
+
+
+
+
+#7. How to Get Started? (Contact Us Now!)
+
+Are you ready to transform the way you track and analyze currency exchange rates? Let us help you build your own system for EUR/USD or any other currency pair.
+
+**Contact me today for a free consultation on how to automate your financial data insights!**
+
+* **Your Name:** Hamza Houzmani
+* **Your Specialization:** Business Intelligence & Automation Specialist
+* **Email:** [hamza@haouzmanianalytics.com]
+* **Your LinkedIn Profile:** [www.linkedin.com/in/hamza-haouzmani-4a0832383]
+* **My Services (Fiverr/Khamsat):** [https://www.fiverr.com/users/hhdatahub/seller_dashboard]
+
+---
+
+## 8. Certifications
+
+Certifications enhance your credibility. You can include any relevant certifications.
+
+* **Google Data Analytics Certified**
+
+* ![Google Data Analytics Certified Logo](C:/Users/hamza/OneDrive/Bureau/DAWRA/CERTIFICATE/google_data_analytics.jpg)
+[link](<https://coursera.org/share/41e6b6aac21396c35a189cec6f42ddfb>)
+
+* _**Explanation:** This certification indicates expertise in data analytics and Google tools._
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
